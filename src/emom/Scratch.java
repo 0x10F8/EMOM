@@ -4,16 +4,22 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -33,6 +39,18 @@ public class Scratch {
             this.index = index;
         }
 
+    }
+
+    static class LongIndex {
+        private long index;
+
+        public long getIndex() {
+            return index;
+        }
+
+        public void setIndex(long index) {
+            this.index = index;
+        }
     }
 
     public static void main(String[] args) {
@@ -56,15 +74,34 @@ public class Scratch {
         final JTextField time = new JTextField("00:00:00");
         time.setFont(new Font("Arial", 1, 39));
         time.setEditable(false);
+        topPanel.add(time);
 
         final JTextArea itemsLabel = new JTextArea();
         itemsLabel.setText("\n\n\n\n\n\n");
         itemsLabel.setEditable(false);
         itemsLabel.setFont(new Font("Arial", 0, 39));
 
-        topPanel.add(time);
+
+        final JTextArea itemsCount = new JTextArea();
+        itemsCount.setText("\n\n\n\n\n\n");
+        itemsCount.setEditable(false);
+        itemsCount.setFont(new Font("Arial", 0, 15));
+
+
+        final JButton start = new JButton("Start");
+        final JButton end = new JButton("End");
+        final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttons.add(start);
+        buttons.add(end);
+
+        final JPanel centrePanel = new JPanel(new BorderLayout());
+        centrePanel.add(itemsLabel, BorderLayout.LINE_START);
+        centrePanel.add(itemsCount, BorderLayout.LINE_END);
+
+
         mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(itemsLabel, BorderLayout.CENTER);
+        mainPanel.add(centrePanel, BorderLayout.CENTER);
+        mainPanel.add(buttons, BorderLayout.SOUTH);
 
         app.add(mainPanel);
         app.setSize(500, 500);
@@ -81,6 +118,13 @@ public class Scratch {
                 "Thrusters",
                 "Crunches");
 
+        final Map<String, Integer> counts = new HashMap<String, Integer>();
+
+        for (final String item : items) {
+            counts.put(item, 0);
+        }
+
+
         final int itemsAtATime = 4;
 
         final Index startIndex = new Index();
@@ -91,12 +135,13 @@ public class Scratch {
         final Index previousSeconds = new Index();
         previousSeconds.setIndex(-1);
 
-        final long startTime = new Date().getTime();
+        LongIndex startTime = new LongIndex();
 
-        timer.schedule(new TimerTask() {
+        final TimerTask emomTask = new TimerTask() {
+
             @Override
             public void run() {
-                int secondsSinceStart = (int) ((new Date().getTime() - startTime) / 1000);
+                int secondsSinceStart = (int) ((new Date().getTime() - startTime.getIndex()) / 1000);
                 // New Second
                 if (secondsSinceStart != previousSeconds.getIndex()) {
                     // Update timer
@@ -109,16 +154,33 @@ public class Scratch {
 
                     // Do timer stuff every minute
                     if (seconds == 0) {
-                        itemsLabel.setBackground(Color.WHITE);
+                        time.setBackground(Color.WHITE);
                         playSound("bell.wav");
-                        displayItems(startIndex, itemsAtATime, items, itemsLabel);
+                        displayItems(startIndex, itemsAtATime, items, itemsLabel, itemsCount, counts);
                     } else if (seconds >= 57) {
-                        itemsLabel.setBackground(Color.RED);
+                        time.setBackground(Color.RED);
                         playSound("beep.wav");
                     }
                 }
             }
-        }, 0, 100);
+        };
+
+        start.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startTime.setIndex(new Date().getTime());
+                timer.schedule(emomTask, 0, 100);
+            }
+        });
+
+        end.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                timer.cancel();
+            }
+        });
+
+
     }
 
     private static synchronized void playSound(final String url) {
@@ -139,7 +201,7 @@ public class Scratch {
     }
 
     private static void displayItems(final Index startIndex, int itemsAtATime, final List<String> allItems,
-            final JTextArea items) {
+            final JTextArea items, final JTextArea countText, final Map<String, Integer> itemCounts) {
         final List<String> runItems = getItems(allItems, itemsAtATime, startIndex.getIndex());
         startIndex.setIndex(startIndex.getIndex() + 1);
         if (startIndex.getIndex() == allItems.size()) {
@@ -148,8 +210,16 @@ public class Scratch {
         String text = "";
         for (String item : runItems) {
             text += item + "\n";
+            itemCounts.put(item, itemCounts.get(item)+1);
         }
+
         items.setText(text);
+
+        text = "";
+        for (Entry<String, Integer> entry : itemCounts.entrySet()) {
+            text += entry.getKey() +":" + entry.getValue() +"\n";
+        }
+        countText.setText(text);
     }
 
     private static List<String> getItems(final List<String> allItems, final int atATime, final int startIndex) {
