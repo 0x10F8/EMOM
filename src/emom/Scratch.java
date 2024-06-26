@@ -81,12 +81,10 @@ public class Scratch {
         itemsLabel.setEditable(false);
         itemsLabel.setFont(new Font("Arial", 0, 39));
 
-
         final JTextArea itemsCount = new JTextArea();
         itemsCount.setText("\n\n\n\n\n\n");
         itemsCount.setEditable(false);
         itemsCount.setFont(new Font("Arial", 0, 15));
-
 
         final JButton start = new JButton("Start");
         final JButton end = new JButton("End");
@@ -97,7 +95,6 @@ public class Scratch {
         final JPanel centrePanel = new JPanel(new BorderLayout());
         centrePanel.add(itemsLabel, BorderLayout.LINE_START);
         centrePanel.add(itemsCount, BorderLayout.LINE_END);
-
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(centrePanel, BorderLayout.CENTER);
@@ -112,6 +109,7 @@ public class Scratch {
                 "Clean and Jerk",
                 "Snatch",
                 "Squat",
+                "Floor Press",
                 "Row",
                 "Swing",
                 "Push Up",
@@ -120,10 +118,8 @@ public class Scratch {
 
         final Map<String, Integer> counts = new HashMap<String, Integer>();
 
-        for (final String item : items) {
+        for (final String item : items)
             counts.put(item, 0);
-        }
-
 
         final int itemsAtATime = 4;
 
@@ -158,6 +154,7 @@ public class Scratch {
                         playSound("bell.wav");
                         displayItems(startIndex, itemsAtATime, items, itemsLabel, itemsCount, counts);
                     } else if (seconds >= 57) {
+                        // 3 seconds before minute do a warning
                         time.setBackground(Color.RED);
                         playSound("beep.wav");
                     }
@@ -179,7 +176,6 @@ public class Scratch {
                 timer.cancel();
             }
         });
-
 
     }
 
@@ -204,21 +200,17 @@ public class Scratch {
             final JTextArea items, final JTextArea countText, final Map<String, Integer> itemCounts) {
         final List<String> runItems = getItems(allItems, itemsAtATime, startIndex.getIndex());
         startIndex.setIndex(startIndex.getIndex() + 1);
-        if (startIndex.getIndex() == allItems.size()) {
+        if (startIndex.getIndex() == allItems.size())
             startIndex.setIndex(0);
-        }
         String text = "";
         for (String item : runItems) {
             text += item + "\n";
-            itemCounts.put(item, itemCounts.get(item)+1);
+            itemCounts.put(item, itemCounts.get(item) + 1);
         }
-
         items.setText(text);
-
         text = "";
-        for (Entry<String, Integer> entry : itemCounts.entrySet()) {
-            text += entry.getKey() +":" + entry.getValue() +"\n";
-        }
+        for (Entry<String, Integer> entry : itemCounts.entrySet())
+            text += entry.getKey() + ":" + entry.getValue() + "\n";
         countText.setText(text);
     }
 
@@ -228,11 +220,10 @@ public class Scratch {
         for (int i = startIndex; i < allItems.size(); i++) {
             items.add(allItems.get(i));
             taken++;
-            if (taken == atATime) {
+            if (taken == atATime)
                 break;
-            } else if (i == allItems.size() - 1) {
+            else if (i == allItems.size() - 1)
                 i = -1;
-            }
         }
         return items;
     }
